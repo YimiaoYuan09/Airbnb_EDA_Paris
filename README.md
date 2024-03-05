@@ -2,7 +2,7 @@
 
 ## Overview
 
-This report analyzes the Airbnb listings in Paris, France, as at 04 March 2024. The dataset is read from the Inside Airbnb website. This report will explore distribution and properties of different variables and analyze the relationship between them.
+This report analyzes the Airbnb listings in Paris, France, as at 04 March 2024. The dataset is read from the [Inside Airbnb](http://insideairbnb.com/). This report will explore distribution and properties of different variables and analyze the relationship between them.
 
 ## File Structure
 
