@@ -28,9 +28,12 @@ library(mice)
 library(modelsummary)
 library(naniar)
 library(tidyverse)
+library(ggplot2)
 ```
 
-# Download and Save Data
+# Introduction
+This report analyzes the Airbnb listings in Paris, France, as at 04 March 2024 using R (@citeR). The dataset is read from the Inside Airbnb (@citeWeb) website, and cleaned and explored using `tidyverse` (@citeTidyverse), `janitor` (@citeJanitor), `knitr` (@citeKnitr), `lubridate` (@citeLubridate), `mice` (@citeMice), `modelsummary` (@citeModelsummary), `ggplot2` (@citeGgplot2) and `naniar` (@citeNaniar). This report will explore distribution and properties of different variables and analyze the relationship between them.
+
 ```{r}
 #| include: false
 #| warning: false
@@ -41,6 +44,10 @@ airbnb_raw <- read_csv(here::here("inputs", "data", "airbnb_raw_data.csv"))
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
+
 # exploratory: create a parquet file with selected variables
 airbnb_select <-
   airbnb_raw |>
@@ -63,6 +70,10 @@ rm(airbnb_raw)
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
+
 # save the parquet file
 write_parquet(
   x = airbnb_select, 
@@ -71,13 +82,21 @@ write_parquet(
   )
 ```
 
-# Distribution and properties of Price
+# Distribution and Properties
+The raw dataset is cleaned and used to create a parquet file with selected variables for exploratory purposes. I first look at the price of the Airbnb and plot the distribution in @fig-price. There are outliers on regular scale, so I also use a log scale to plot the distribution. From the graph, we can see that most properties have have low prices, number of properties decreases as the price increases.
+
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 airbnb_select$price |>
   head()
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # get character from price
 airbnb_select$price |>
   str_split("") |>
@@ -86,6 +105,9 @@ airbnb_select$price |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # , value
 airbnb_select |>
   select(price) |>
@@ -93,6 +115,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # remove $
 airbnb_select <-
   airbnb_select |>
@@ -103,8 +128,10 @@ airbnb_select <-
 ```
 
 ```{r}
-#| eval: true
+#| echo: false
 #| warning: false
+#| message: false
+#| eval: true
 #| label: fig-price
 #| fig-cap: "Distribution of prices of Paris Airbnb rentals in March 2024"
 #| fig-subcap: ["Distribution of prices","Using the log scale for prices more than $1,000"]
@@ -132,13 +159,15 @@ airbnb_select |>
   ) +
   scale_y_log10()
 ```
-
+Then I turned my focus on price that less than \$1000, and the distribution contains more detailed. @fig-price-detail-1 shows that there are some bunching in the price, so I choose to take a further look at prices between \$90 and \$250. @fig-price-detail-2 also shows some bunching in the graph, which might due to the reason that prices around numbers ending in zero or nine.
 ```{r}
+#| echo: false
+#| message: false
 #| eval: true
 #| warning: false
 #| label: fig-price-detail
 #| fig-cap: "Distribution of prices of Paris Airbnb rentals in March 2024"
-#| fig-subcap: ["Prices less than $1,000 suggest some bunching","Prices between $90 and $210 illustrate the bunching more clearly"]
+#| fig-subcap: ["Prices less than $1,000 suggest some bunching","Prices between $90 and $250 illustrate the bunching more clearly"]
 #| layout-ncol: 2
 
 # focus on price < 1000
@@ -154,7 +183,7 @@ airbnb_select |>
 
 airbnb_select |>
   filter(price > 90) |>
-  filter(price < 210) |>
+  filter(price < 250) |>
   ggplot(aes(x = price)) +
   geom_histogram(binwidth = 1) +
   theme_classic() +
@@ -164,8 +193,6 @@ airbnb_select |>
   )
 ```
 
-
-# Distribution and properties of Superhost
 ```{r}
 #| include: false
 #| warning: false
@@ -178,6 +205,9 @@ airbnb_data_less_1000 <-
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # NA value
 airbnb_data_less_1000 |>
   filter(is.na(host_is_superhost))
@@ -200,6 +230,9 @@ airbnb_data_no_superhost_na <-
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # NA in review scores rating
 airbnb_data_no_superhost_na |>
   filter(is.na(review_scores_rating)) |>
@@ -207,13 +240,18 @@ airbnb_data_no_superhost_na |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 airbnb_data_no_superhost_na |>
   filter(is.na(review_scores_rating)) |>
   select(number_of_reviews) |>
   table()
 ```
-
+Next I look at the superhosts in the Airbnb. After removing the NA value in superhost, I plot the distribution of review scores for all superhosts. @fig-review-scores-rating shows that most of the superhosts' properties have 5 stars, they rarely get 1 or 2 stars.
 ```{r}
+#| echo: false
+#| message: false
 #| eval: true
 #| warning: false
 #| label: fig-review-scores-rating
@@ -243,10 +281,15 @@ airbnb_data_has_reviews <-
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # host response time
 airbnb_data_has_reviews |>
   count(host_response_time)
 ```
+
+There are a lot of NA values in the review scores rating since they do not have enough reviews. For this report, I just remove NA values in review scores rating. 
 
 ```{r}
 #| include: false
@@ -267,9 +310,13 @@ airbnb_data_has_reviews <-
   )
 ```
 
+I also interested in the host response time, which is how quickly a host responds to an inquiry. There are also a lot of NAs in this variable, so I want to see that if there is a relationship with the review score. @fig-host-response-time shows that most of properties get a rate over 4 stars. However, `ggplot2` drops a lot of missing values, so I use geom_miss_point() from `naniar` to include them in the graph (@fig-host-response-time-missing).
+
 ```{r}
-#| eval: true
+#| echo: false
 #| warning: false
+#| message: false
+#| eval: true
 #| label: fig-host-response-time
 #| fig-cap: "Distribution of review scores for properties with NA response time, for Paris Airbnb rentals in March 2024"
 
@@ -287,8 +334,10 @@ airbnb_data_has_reviews |>
 ```
 
 ```{r}
-#| eval: true
+#| echo: false
 #| warning: false
+#| message: false
+#| eval: true
 #| label: fig-host-response-time-missing
 #| fig-cap: "Missing values in Paris Airbnb data, by host response time"
 
@@ -308,6 +357,9 @@ airbnb_data_has_reviews |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # remove NA in host_response_time
 # superhost, has revies, has response time
 airbnb_select <-
@@ -315,11 +367,12 @@ airbnb_select <-
   filter(!is.na(host_response_time))
 ```
 
-
-# Distribution and properties of Host Properties
+I also interested in how many properties a host has on Airbnb. From @fig-host-properties, we can see that most hosts have 1 properties, some hosts have less than 10 properties. Few of them have more than 100 properties, which is a little bit strange.
 ```{r}
-#| eval: true
 #| warning: false
+#| message: false
+#| eval: true
+#| echo: false
 #| label: fig-host-properties
 #| fig-cap: "Distribution of the number of properties a host has on Airbnb, for Paris Airbnb rentals in March 2024"
 
@@ -335,6 +388,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # host with number of listings > 500
 airbnb_select |>
   filter(host_total_listings_count >= 500) |>
@@ -342,6 +398,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # focus on host with only 1 property
 airbnb_select <-
   airbnb_select |>
@@ -350,11 +409,15 @@ airbnb_select <-
   select(-n)
 ```
 
+\newpage
 
-# Relationship between prices and reviews, superhosts, number of properties, neighborhood
+# Relationship between variables
+After explore distribution of individual variables, I also interested in relationship between variables. @fig-price-review shows the relationship between price and review and whether a host is a superhost, for properties with more than 1 review. From the graph, we can see that most properties have price less than /$250 and gain a 4 or 5 stars review. If the host is a superhost, the properties are more likely have higher price and have more 5 stars review. As the price increases, the average review score also increases. 
 ```{r}
-#| eval: true
+#| echo: false
 #| warning: false
+#| message: false
+#| eval: true
 #| label: fig-price-review
 #| fig-cap: "Relationship between price and review and whether a host is a superhost, for Paris Airbnb rentals in March 2024"
 
@@ -374,6 +437,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # proportion of superhost
 airbnb_select |>
   count(host_is_superhost) |>
@@ -384,6 +450,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # host response time, by superhost
 airbnb_select |>
   tabyl(host_response_time, host_is_superhost) |>
@@ -394,6 +463,9 @@ airbnb_select |>
 ```
 
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # neighbourhood
 airbnb_select |>
   tabyl(neighbourhood_cleansed) |>
@@ -404,8 +476,15 @@ airbnb_select |>
   head()
 ```
 
+\newpage
+
 # Model
+A model is run on the dataset to gain a better understanding of relationships between multiple variables. This model is going to predict whether someone is a superhost, using host response time and review scores rating. Since the output is a binary value, I use the logistic regression for this model. The result shows that each variable is positively associated with the probability of being a superhost.
+
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # forecast whether someone is a superhost
 # logistic regression
 # affected by faster responses and better reviews
@@ -420,11 +499,16 @@ logistic_reg_superhost_response_review <-
 ```
 
 ```{r}
+#| echo: false
+#| warning: false
+#| message: false
 modelsummary(logistic_reg_superhost_response_review)
 ```
 
-# Save Analysis Dataset
 ```{r}
+#| include: false
+#| warning: false
+#| message: false
 # save analysis data
 write_parquet(
   x = airbnb_select, 
@@ -432,3 +516,8 @@ write_parquet(
   )
 ```
 
+
+\newpage
+
+
+# References
